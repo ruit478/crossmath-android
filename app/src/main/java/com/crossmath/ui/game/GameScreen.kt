@@ -263,26 +263,26 @@ fun PuzzleGridView(
                 }
             }
         }
-    }
 
-    // ── Column targets ──
-    val targetOffset = cellWidth * 0.8f + 4.dp
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = targetOffset, top = 4.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        for (c in 0 until size) {
-            Text(
-                text = "=${puzzle.colTargets[c]}",
-                fontSize = if (size <= 3) 16.sp else 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = TargetColor,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f)
-            )
+        // ── Column targets ──
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Spacer(modifier = Modifier.width(cellWidth * 0.8f + 4.dp))
+            for (c in 0 until size) {
+                Text(
+                    text = "=${puzzle.colTargets[c]}",
+                    fontSize = if (size <= 3) 18.sp else 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TargetColor,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.width(cellWidth)
+                )
+                if (c < size - 1) {
+                    Spacer(modifier = Modifier.width(opWidth))
+                }
+            }
         }
     }
 }
