@@ -58,9 +58,9 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
             Spacer(modifier = Modifier.size(16.dp))
             Text("Generating puzzle…", color = Color(0xFF757575), fontSize = 16.sp)
         } else {
-            Text("CrossMath", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
-
             key(puzzle.size) {
+                Text("CrossMath", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+
                 PuzzleGridView(
                     puzzle = puzzle,
                     playerEntries = playerEntries,
@@ -68,29 +68,29 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
                     validationResult = validationResult,
                     onCellClick = { r, c -> viewModel.selectCell(r, c) }
                 )
+
+                StatusBar(validationResult)
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(onClick = { viewModel.newGame(size = 3, difficulty = Difficulty.EASY) }) {
+                        Text("3×3 Easy")
+                    }
+                    Button(onClick = { viewModel.newGame(size = 4, difficulty = Difficulty.MEDIUM) }) {
+                        Text("4×4 Medium")
+                    }
+                    Button(onClick = { viewModel.check() }) {
+                        Text("Check")
+                    }
+                }
+
+                NumberPadView(
+                    onNumber = { viewModel.enterNumber(it) },
+                    onErase = { viewModel.erase() }
+                )
             }
-
-            StatusBar(validationResult)
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(onClick = { viewModel.newGame(size = 3, difficulty = Difficulty.EASY) }) {
-                    Text("3×3 Easy")
-                }
-                Button(onClick = { viewModel.newGame(size = 4, difficulty = Difficulty.MEDIUM) }) {
-                    Text("4×4 Medium")
-                }
-                Button(onClick = { viewModel.check() }) {
-                    Text("Check")
-                }
-            }
-
-            NumberPadView(
-                onNumber = { viewModel.enterNumber(it) },
-                onErase = { viewModel.erase() }
-            )
         }
     }
 }
