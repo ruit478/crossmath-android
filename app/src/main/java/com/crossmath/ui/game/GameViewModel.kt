@@ -50,20 +50,18 @@ class GameViewModel : ViewModel() {
     fun enterNumber(num: Int) {
         val cell = selectedCell ?: return
         val (r, c) = cell
+        if (r !in puzzle.numbers.indices || c !in puzzle.numbers[r].indices) return
         if (puzzle.given[r][c]) return
 
         playerEntries = playerEntries.toMutableMap().apply {
             put("$r,$c", num)
         }
-        // Keep selection so the user can tap another number quickly
-
-        // Auto-check when all filled
-        if (isAllFilled) check()
     }
 
     fun erase() {
         val cell = selectedCell ?: return
         val (r, c) = cell
+        if (r !in puzzle.numbers.indices || c !in puzzle.numbers[r].indices) return
         if (puzzle.given[r][c]) return
 
         playerEntries = playerEntries.toMutableMap().apply {
@@ -73,17 +71,23 @@ class GameViewModel : ViewModel() {
     }
 
     fun check() {
-        val fullNumbers = puzzle.numbers.mapIndexed { r, row ->
-            row.mapIndexed { c, _ ->
-                if (puzzle.given[r][c]) puzzle.numbers[r][c]
-                else playerEntries["$r,$c"]
+        if (!isAllFilled) return
+
+        try {
+            val fullNumbers = puzzle.numbers.mapIndexed { r, row ->
+                row.mapIndexed { c, _ ->
+                    if (puzzle.given[r][c]) puzzle.numbers[r][c]
+                    else playerEntries["$r,$c"]
+                }
             }
+            val testPuzzle = puzzle.copy(numbers = fullNumbers)
+            validationResult = PuzzleValidator.validate(testPuzzle)
+        } catch (e: Exception) {
+            android.util.Log.e("CrossMath", "check failed", e)
         }
-        val testPuzzle = puzzle.copy(numbers = fullNumbers)
-        validationResult = PuzzleValidator.validate(testPuzzle)
     }
 
-    fun newGame(size: Int = 3, difficulty: Difficulty = Difficulty.EASY) {
+    fun newGame(size: Int, difficulty: Difficulty) {
         puzzle = PuzzleGenerator.generate(size, difficulty)
         playerEntries = mutableMapOf()
         selectedCell = null

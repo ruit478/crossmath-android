@@ -300,17 +300,19 @@ fun NumberPadView(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            for (n in 1..3) NumberButton(n, onNumber)
-            Spacer(modifier = Modifier.width(12.dp))
-            for (n in 4..6) NumberButton(n, onNumber)
-            Spacer(modifier = Modifier.width(12.dp))
-            for (n in 7..9) NumberButton(n, onNumber)
+        // Three rows of 3
+        for (rowStart in 1..9 step 3) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                for (n in rowStart..rowStart + 2) {
+                    NumberButton(n, onNumber)
+                }
+            }
         }
+        // Erase
         Row(
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()
