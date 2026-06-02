@@ -1,17 +1,15 @@
 package com.crossmath.ui.game
 
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.crossmath.engine.PuzzleGenerator
 import com.crossmath.engine.PuzzleValidator
 import com.crossmath.model.Difficulty
 import com.crossmath.model.Puzzle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * Immutable snapshot of all game state — swapped atomically so Compose
@@ -112,19 +110,18 @@ class GameViewModel : ViewModel() {
     }
 
     /**
-     * Generate a new puzzle off the main thread so Compose gets a frame to
-     * show [loading] before the grid is swapped — prevents stale-tree crashes.
+     * Split into two frames:
+     * 1. Set loading=true → grid replaced by spinner
+     * 2. Post to Handler — generate puzzle, swap state, hide spinner
+     * Never renders the grid during a transition.
      */
     fun newGame(size: Int, difficulty: Difficulty) {
-        if (loading) return  // ignore rapid double-taps
+        if (loading) return
 
-        viewModelScope.launch {
-            loading = true
+        loading = true  // triggers recomposition → spinner visible
 
-            val newPuzzle = withContext(Dispatchers.Default) {
-                PuzzleGenerator.generate(size, difficulty)
-            }
-
+        Handler(Looper.getMainLooper()).post {
+            val newPuzzle = PuzzleGenerator.generate(size, difficulty)
             state = GameState(puzzle = newPuzzle)
             loading = false
         }

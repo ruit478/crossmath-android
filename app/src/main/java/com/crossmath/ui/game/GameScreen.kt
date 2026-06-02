@@ -8,16 +8,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,7 +48,6 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -198,7 +195,7 @@ fun PuzzleGridView(
                     Box(
                         modifier = Modifier
                             .width(cellWidth)
-                            .aspectRatio(1f)
+                            .height(cellWidth)
                             .border(borderWidth, borderColor)
                             .background(bgColor)
                             .clickable(enabled = !isGiven) { onCellClick(r, c) },
@@ -255,7 +252,7 @@ fun PuzzleGridView(
                         Box(
                             modifier = Modifier
                                 .width(cellWidth)
-                                .aspectRatio(2f),
+                                .height(cellWidth / 2),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
