@@ -51,9 +51,19 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text("CrossMath", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+        Text(
+            "CrossMath",
+            fontSize = 30.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color(0xFF1565C0)
+        )
+        Text(
+            "Fill the grid so every row and column is correct",
+            fontSize = 12.sp,
+            color = Color(0xFF757575)
+        )
 
         PuzzleGridView(
             puzzle = puzzle,
@@ -69,15 +79,29 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(onClick = { viewModel.newGame(size = 3, difficulty = Difficulty.EASY) }) {
-                Text("3×3 Easy")
-            }
-            Button(onClick = { viewModel.newGame(size = 4, difficulty = Difficulty.MEDIUM) }) {
-                Text("4×4 Medium")
-            }
-            Button(onClick = { viewModel.check() }) {
-                Text("Check")
-            }
+            Button(
+                onClick = { viewModel.newGame(size = 3, difficulty = Difficulty.EASY) },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1565C0)),
+                shape = RoundedCornerShape(8.dp)
+            ) { Text("3×3", fontWeight = FontWeight.Bold) }
+
+            Button(
+                onClick = { viewModel.newGame(size = 4, difficulty = Difficulty.MEDIUM) },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1565C0)),
+                shape = RoundedCornerShape(8.dp)
+            ) { Text("4×4", fontWeight = FontWeight.Bold) }
+
+            Button(
+                onClick = { viewModel.newGame(size = 5, difficulty = Difficulty.HARD) },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1565C0)),
+                shape = RoundedCornerShape(8.dp)
+            ) { Text("5×5", fontWeight = FontWeight.Bold) }
+
+            Button(
+                onClick = { viewModel.check() },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                shape = RoundedCornerShape(8.dp)
+            ) { Text("Check", fontWeight = FontWeight.Bold) }
         }
 
         NumberPadView(
@@ -92,20 +116,22 @@ private fun StatusBar(result: PuzzleValidator.ValidationResult?) {
     when {
         result == null -> Text(
             "Tap a blank cell, then a number",
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             color = Color(0xFF757575)
         )
         result.isCorrect -> Text(
-            "✓ Correct! All equations valid!",
-            fontSize = 18.sp,
+            "  All equations valid!",
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF2E7D32)
         )
         else -> {
-            val rowMsg = if (result.rowErrors.isNotEmpty()) "rows: ${result.rowErrors.joinToString(",")}" else ""
-            val colMsg = if (result.colErrors.isNotEmpty()) "cols: ${result.colErrors.joinToString(",")}" else ""
+            val rowMsg = if (result.rowErrors.isNotEmpty())
+                "rows ${result.rowErrors.joinToString(",")}" else ""
+            val colMsg = if (result.colErrors.isNotEmpty())
+                "cols ${result.colErrors.joinToString(",")}" else ""
             Text(
-                "✗ Errors — $rowMsg $colMsg",
+                "Errors — $rowMsg $colMsg",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFC62828)
@@ -116,7 +142,8 @@ private fun StatusBar(result: PuzzleValidator.ValidationResult?) {
 
 // ── Colors ─────────────────────────────────────────────────────
 
-private val GridBg = Color(0xFFE8E0D0)
+private val GridBg = Color(0xFFF5F0E0)
+private val GridBorder = Color(0xFFD7CCC8)
 private val CellBorder = Color(0xFF333333)
 private val CellBorderSelected = Color(0xFFFF6F00)
 private val CellBgGiven = Color(0xFFFFFFFF)
@@ -150,13 +177,13 @@ fun PuzzleGridView(
         size <= 4 -> 32.dp
         else -> 28.dp
     }
-    // Offset for the row-target column on the right
     val targetColWidth = cellWidth * 0.8f + 4.dp
 
     Column(
         modifier = modifier
-            .background(GridBg, RoundedCornerShape(12.dp))
-            .padding(8.dp),
+            .background(GridBg, RoundedCornerShape(14.dp))
+            .border(1.dp, GridBorder, RoundedCornerShape(14.dp))
+            .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         for (r in 0 until size) {
@@ -203,7 +230,7 @@ fun PuzzleGridView(
                         )
                     }
 
-                    // ── Row operator ──
+                    // Row operator
                     if (c < size - 1) {
                         Box(
                             modifier = Modifier
@@ -236,7 +263,7 @@ fun PuzzleGridView(
                 }
             }
 
-            // ── Column operators ──
+            // Column operators
             if (r < size - 1) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(0.dp),
@@ -267,23 +294,30 @@ fun PuzzleGridView(
             }
         }
 
-        // ── Column targets (outside grid, aligned via padding) ──
+        // ── Column targets — mirror number-row structure ──
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = targetColWidth),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Spacer(modifier = Modifier.width(targetColWidth))
             for (c in 0 until size) {
-                Text(
-                    text = "=${puzzle.colTargets[c]}",
-                    fontSize = if (size <= 3) 18.sp else 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TargetColor,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f)
-                )
+                Box(
+                    modifier = Modifier
+                        .width(cellWidth)
+                        .height(cellWidth),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "=${puzzle.colTargets[c]}",
+                        fontSize = if (size <= 3) 18.sp else 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TargetColor,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                if (c < size - 1) {
+                    Spacer(modifier = Modifier.width(opWidth))
+                }
             }
         }
     }
@@ -298,37 +332,29 @@ fun NumberPadView(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.padding(top = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier.padding(top = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Three rows of 3
         for (rowStart in 1..9 step 3) {
             Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 for (n in rowStart..rowStart + 2) {
                     NumberButton(n, onNumber)
                 }
             }
         }
-        // Erase
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+        Button(
+            onClick = onErase,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFE0E0E0),
+                contentColor = Color(0xFF333333)
+            ),
+            shape = RoundedCornerShape(8.dp)
         ) {
-            Button(
-                onClick = onErase,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE0E0E0),
-                    contentColor = Color(0xFF333333)
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text("Erase", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            }
+            Text("Erase", fontWeight = FontWeight.Bold, fontSize = 18.sp)
         }
     }
 }
@@ -337,7 +363,7 @@ fun NumberPadView(
 private fun NumberButton(num: Int, onClick: (Int) -> Unit) {
     Box(
         modifier = Modifier
-            .size(60.dp)
+            .size(58.dp)
             .clip(CircleShape)
             .background(Color(0xFF1565C0))
             .clickable { onClick(num) },
@@ -345,7 +371,7 @@ private fun NumberButton(num: Int, onClick: (Int) -> Unit) {
     ) {
         Text(
             text = "$num",
-            fontSize = 26.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
             textAlign = TextAlign.Center
