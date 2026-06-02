@@ -9,10 +9,6 @@ import com.crossmath.engine.PuzzleValidator
 import com.crossmath.model.Difficulty
 import com.crossmath.model.Puzzle
 
-/**
- * Immutable snapshot of all game state — swapped atomically so Compose
- * never sees a stale mix of puzzle vs entries vs selection.
- */
 data class GameState(
     val puzzle: Puzzle,
     val playerEntries: Map<String, Int> = emptyMap(),
@@ -28,15 +24,18 @@ data class GameState(
         }
 }
 
-/**
- * Manages puzzle state via atomic snapshot swaps — no partial-state reads.
- */
 class GameViewModel : ViewModel() {
 
     var state by mutableStateOf(
         GameState(puzzle = PuzzleGenerator.generate(size = 3, difficulty = Difficulty.EASY))
     )
         private set
+
+    // ── Debounce ───────────────────────────────────────────────
+    private var lastSwap = 0L
+    private companion object {
+        private const val DEBOUNCE_MS = 400L
+    }
 
     // ── Convenience delegates ──
 
@@ -52,7 +51,6 @@ class GameViewModel : ViewModel() {
         if (row !in s.puzzle.numbers.indices) return
         if (col !in s.puzzle.numbers[row].indices) return
         if (s.puzzle.given[row][col]) return
-
         state = s.copy(
             selectedCell = if (s.selectedCell == row to col) null else row to col,
             validationResult = null
@@ -65,7 +63,6 @@ class GameViewModel : ViewModel() {
         val (r, c) = cell
         if (r !in s.puzzle.numbers.indices || c !in s.puzzle.numbers[r].indices) return
         if (s.puzzle.given[r][c]) return
-
         state = s.copy(
             playerEntries = s.playerEntries + ("$r,$c" to num)
         )
@@ -77,7 +74,6 @@ class GameViewModel : ViewModel() {
         val (r, c) = cell
         if (r !in s.puzzle.numbers.indices || c !in s.puzzle.numbers[r].indices) return
         if (s.puzzle.given[r][c]) return
-
         state = s.copy(
             playerEntries = s.playerEntries - "$r,$c",
             validationResult = null
@@ -103,8 +99,16 @@ class GameViewModel : ViewModel() {
     }
 
     fun newGame(size: Int, difficulty: Difficulty) {
-        state = GameState(
-            puzzle = PuzzleGenerator.generate(size, difficulty)
-        )
+        val now = System.currentTimeMillis()
+        if (now - lastSwap < DEBOUNCE_MS) return
+        lastSwap = now
+
+        try {
+            state = GameState(
+                puzzle = PuzzleGenerator.generate(size, difficulty)
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("CrossMath", "newGame crash: $size $difficulty", e)
+        }
     }
 }
