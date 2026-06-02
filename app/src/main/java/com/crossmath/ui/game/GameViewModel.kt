@@ -4,10 +4,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.crossmath.engine.PuzzleGenerator
 import com.crossmath.engine.PuzzleValidator
 import com.crossmath.model.Difficulty
 import com.crossmath.model.Puzzle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Immutable snapshot of all game state — swapped atomically so Compose
@@ -29,13 +33,18 @@ data class GameState(
 }
 
 /**
- * Manages puzzle state via atomic snapshot swaps — no partial-state reads.
+ * Manages puzzle state via atomic snapshot swaps.
+ * loading=true hides the grid while a new puzzle generates.
  */
 class GameViewModel : ViewModel() {
 
     var state by mutableStateOf(
         GameState(puzzle = PuzzleGenerator.generate(size = 3, difficulty = Difficulty.EASY))
     )
+        private set
+
+    /** True while a new puzzle is being generated — grid is hidden. */
+    var loading by mutableStateOf(false)
         private set
 
     // ── Convenience delegates ──
@@ -102,9 +111,22 @@ class GameViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Generate a new puzzle off the main thread so Compose gets a frame to
+     * show [loading] before the grid is swapped — prevents stale-tree crashes.
+     */
     fun newGame(size: Int, difficulty: Difficulty) {
-        state = GameState(
-            puzzle = PuzzleGenerator.generate(size, difficulty)
-        )
+        if (loading) return  // ignore rapid double-taps
+
+        viewModelScope.launch {
+            loading = true
+
+            val newPuzzle = withContext(Dispatchers.Default) {
+                PuzzleGenerator.generate(size, difficulty)
+            }
+
+            state = GameState(puzzle = newPuzzle)
+            loading = false
+        }
     }
 }

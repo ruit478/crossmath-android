@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -44,6 +45,7 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
     val playerEntries = viewModel.playerEntries
     val selectedCell = viewModel.selectedCell
     val validationResult = viewModel.validationResult
+    val loading = viewModel.loading
 
     Column(
         modifier = Modifier
@@ -53,39 +55,46 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("CrossMath", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+        if (loading) {
+            Spacer(modifier = Modifier.size(80.dp))
+            CircularProgressIndicator(color = Color(0xFF1565C0))
+            Spacer(modifier = Modifier.size(16.dp))
+            Text("Generating puzzle…", color = Color(0xFF757575), fontSize = 16.sp)
+        } else {
+            Text("CrossMath", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
 
-        key(puzzle.size) {
-            PuzzleGridView(
-                puzzle = puzzle,
-                playerEntries = playerEntries,
-                selectedCell = selectedCell,
-                validationResult = validationResult,
-                onCellClick = { r, c -> viewModel.selectCell(r, c) }
+            key(puzzle.size) {
+                PuzzleGridView(
+                    puzzle = puzzle,
+                    playerEntries = playerEntries,
+                    selectedCell = selectedCell,
+                    validationResult = validationResult,
+                    onCellClick = { r, c -> viewModel.selectCell(r, c) }
+                )
+            }
+
+            StatusBar(validationResult)
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(onClick = { viewModel.newGame(size = 3, difficulty = Difficulty.EASY) }) {
+                    Text("3×3 Easy")
+                }
+                Button(onClick = { viewModel.newGame(size = 4, difficulty = Difficulty.MEDIUM) }) {
+                    Text("4×4 Medium")
+                }
+                Button(onClick = { viewModel.check() }) {
+                    Text("Check")
+                }
+            }
+
+            NumberPadView(
+                onNumber = { viewModel.enterNumber(it) },
+                onErase = { viewModel.erase() }
             )
         }
-
-        StatusBar(validationResult)
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Button(onClick = { viewModel.newGame(size = 3, difficulty = Difficulty.EASY) }) {
-                Text("3×3 Easy")
-            }
-            Button(onClick = { viewModel.newGame(size = 4, difficulty = Difficulty.MEDIUM) }) {
-                Text("4×4 Medium")
-            }
-            Button(onClick = { viewModel.check() }) {
-                Text("Check")
-            }
-        }
-
-        NumberPadView(
-            onNumber = { viewModel.enterNumber(it) },
-            onErase = { viewModel.erase() }
-        )
     }
 }
 
