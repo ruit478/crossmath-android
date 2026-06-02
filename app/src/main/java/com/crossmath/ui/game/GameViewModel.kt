@@ -1,7 +1,5 @@
 package com.crossmath.ui.game
 
-import android.os.Handler
-import android.os.Looper
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -31,18 +29,13 @@ data class GameState(
 }
 
 /**
- * Manages puzzle state via atomic snapshot swaps.
- * loading=true hides the grid while a new puzzle generates.
+ * Manages puzzle state via atomic snapshot swaps — no partial-state reads.
  */
 class GameViewModel : ViewModel() {
 
     var state by mutableStateOf(
         GameState(puzzle = PuzzleGenerator.generate(size = 3, difficulty = Difficulty.EASY))
     )
-        private set
-
-    /** True while a new puzzle is being generated — grid is hidden. */
-    var loading by mutableStateOf(false)
         private set
 
     // ── Convenience delegates ──
@@ -109,21 +102,9 @@ class GameViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Split into two frames:
-     * 1. Set loading=true → grid replaced by spinner
-     * 2. Post to Handler — generate puzzle, swap state, hide spinner
-     * Never renders the grid during a transition.
-     */
     fun newGame(size: Int, difficulty: Difficulty) {
-        if (loading) return
-
-        loading = true  // triggers recomposition → spinner visible
-
-        Handler(Looper.getMainLooper()).post {
-            val newPuzzle = PuzzleGenerator.generate(size, difficulty)
-            state = GameState(puzzle = newPuzzle)
-            loading = false
-        }
+        state = GameState(
+            puzzle = PuzzleGenerator.generate(size, difficulty)
+        )
     }
 }

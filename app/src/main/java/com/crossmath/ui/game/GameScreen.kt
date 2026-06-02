@@ -8,20 +8,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,55 +43,46 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
     val playerEntries = viewModel.playerEntries
     val selectedCell = viewModel.selectedCell
     val validationResult = viewModel.validationResult
-    val loading = viewModel.loading
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        if (loading) {
-            Spacer(modifier = Modifier.size(80.dp))
-            CircularProgressIndicator(color = Color(0xFF1565C0))
-            Spacer(modifier = Modifier.size(16.dp))
-            Text("Generating puzzle…", color = Color(0xFF757575), fontSize = 16.sp)
-        } else {
-            key(puzzle.size) {
-                Text("CrossMath", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+        Text("CrossMath", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
 
-                PuzzleGridView(
-                    puzzle = puzzle,
-                    playerEntries = playerEntries,
-                    selectedCell = selectedCell,
-                    validationResult = validationResult,
-                    onCellClick = { r, c -> viewModel.selectCell(r, c) }
-                )
+        PuzzleGridView(
+            puzzle = puzzle,
+            playerEntries = playerEntries,
+            selectedCell = selectedCell,
+            validationResult = validationResult,
+            onCellClick = { r, c -> viewModel.selectCell(r, c) }
+        )
 
-                StatusBar(validationResult)
+        StatusBar(validationResult)
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(onClick = { viewModel.newGame(size = 3, difficulty = Difficulty.EASY) }) {
-                        Text("3×3 Easy")
-                    }
-                    Button(onClick = { viewModel.newGame(size = 4, difficulty = Difficulty.MEDIUM) }) {
-                        Text("4×4 Medium")
-                    }
-                    Button(onClick = { viewModel.check() }) {
-                        Text("Check")
-                    }
-                }
-
-                NumberPadView(
-                    onNumber = { viewModel.enterNumber(it) },
-                    onErase = { viewModel.erase() }
-                )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(onClick = { viewModel.newGame(size = 3, difficulty = Difficulty.EASY) }) {
+                Text("3×3 Easy")
+            }
+            Button(onClick = { viewModel.newGame(size = 4, difficulty = Difficulty.MEDIUM) }) {
+                Text("4×4 Medium")
+            }
+            Button(onClick = { viewModel.check() }) {
+                Text("Check")
             }
         }
+
+        NumberPadView(
+            onNumber = { viewModel.enterNumber(it) },
+            onErase = { viewModel.erase() }
+        )
     }
 }
 
@@ -158,6 +149,8 @@ fun PuzzleGridView(
         size <= 4 -> 32.dp
         else -> 28.dp
     }
+    // Offset for the row-target column on the right
+    val targetColWidth = cellWidth * 0.8f + 4.dp
 
     Column(
         modifier = modifier
@@ -195,7 +188,7 @@ fun PuzzleGridView(
                     Box(
                         modifier = Modifier
                             .width(cellWidth)
-                            .height(cellWidth)
+                            .aspectRatio(1f)
                             .border(borderWidth, borderColor)
                             .background(bgColor)
                             .clickable(enabled = !isGiven) { onCellClick(r, c) },
@@ -213,7 +206,7 @@ fun PuzzleGridView(
                     if (c < size - 1) {
                         Box(
                             modifier = Modifier
-                                .width(opWidth),
+                                .widthIn(min = opWidth),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -230,7 +223,7 @@ fun PuzzleGridView(
                 // Row target
                 Box(
                     modifier = Modifier
-                        .width(cellWidth * 0.8f + 4.dp),
+                        .width(targetColWidth),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -252,7 +245,7 @@ fun PuzzleGridView(
                         Box(
                             modifier = Modifier
                                 .width(cellWidth)
-                                .height(cellWidth / 2),
+                                .aspectRatio(2f),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -268,17 +261,19 @@ fun PuzzleGridView(
                             Spacer(modifier = Modifier.width(opWidth))
                         }
                     }
-                    Spacer(modifier = Modifier.width(cellWidth * 0.8f + 4.dp))
+                    Spacer(modifier = Modifier.width(targetColWidth))
                 }
             }
         }
 
-        // ── Column targets ──
+        // ── Column targets (outside grid, aligned via padding) ──
         Row(
-            horizontalArrangement = Arrangement.spacedBy(0.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = targetColWidth),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.width(cellWidth * 0.8f + 4.dp))
             for (c in 0 until size) {
                 Text(
                     text = "=${puzzle.colTargets[c]}",
@@ -286,11 +281,8 @@ fun PuzzleGridView(
                     fontWeight = FontWeight.Bold,
                     color = TargetColor,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.width(cellWidth)
+                    modifier = Modifier.weight(1f)
                 )
-                if (c < size - 1) {
-                    Spacer(modifier = Modifier.width(opWidth))
-                }
             }
         }
     }
