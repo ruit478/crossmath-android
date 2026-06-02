@@ -10,26 +10,15 @@ import com.crossmath.model.Difficulty
 import com.crossmath.model.Puzzle
 
 /**
- * Manages puzzle state: player entries, cell selection, validation.
+ * Immutable snapshot of all game state — swapped atomically so Compose
+ * never sees a stale mix of puzzle vs entries vs selection.
  */
-class GameViewModel : ViewModel() {
-
-    var puzzle by mutableStateOf(PuzzleGenerator.generate(size = 3, difficulty = Difficulty.EASY))
-        private set
-
-    /** Player's number entries for blank cells. Key = "row,col", value = 1-9 */
-    var playerEntries by mutableStateOf(mutableMapOf<String, Int>())
-        private set
-
-    /** Currently selected cell, or null */
-    var selectedCell by mutableStateOf<Pair<Int, Int>?>(null)
-        private set
-
-    /** Null = not yet checked, otherwise the last validation result */
-    var validationResult by mutableStateOf<PuzzleValidator.ValidationResult?>(null)
-        private set
-
-    /** All blank cells have been filled (not necessarily correctly) */
+data class GameState(
+    val puzzle: Puzzle,
+    val playerEntries: Map<String, Int> = emptyMap(),
+    val selectedCell: Pair<Int, Int>? = null,
+    val validationResult: PuzzleValidator.ValidationResult? = null
+) {
     val isAllFilled: Boolean
         get() {
             val blankCount = puzzle.numbers.indices.sumOf { r ->
@@ -37,60 +26,85 @@ class GameViewModel : ViewModel() {
             }
             return playerEntries.size == blankCount
         }
+}
+
+/**
+ * Manages puzzle state via atomic snapshot swaps — no partial-state reads.
+ */
+class GameViewModel : ViewModel() {
+
+    var state by mutableStateOf(
+        GameState(puzzle = PuzzleGenerator.generate(size = 3, difficulty = Difficulty.EASY))
+    )
+        private set
+
+    // ── Convenience delegates ──
+
+    val puzzle get() = state.puzzle
+    val playerEntries get() = state.playerEntries
+    val selectedCell get() = state.selectedCell
+    val validationResult get() = state.validationResult
 
     // ── Actions ────────────────────────────────────────────────
 
     fun selectCell(row: Int, col: Int) {
-        if (row in puzzle.numbers.indices && col in puzzle.numbers[row].indices && !puzzle.given[row][col]) {
-            selectedCell = if (selectedCell == row to col) null else (row to col)
+        val s = state
+        if (row !in s.puzzle.numbers.indices) return
+        if (col !in s.puzzle.numbers[row].indices) return
+        if (s.puzzle.given[row][col]) return
+
+        state = s.copy(
+            selectedCell = if (s.selectedCell == row to col) null else row to col,
             validationResult = null
-        }
+        )
     }
 
     fun enterNumber(num: Int) {
-        val cell = selectedCell ?: return
+        val s = state
+        val cell = s.selectedCell ?: return
         val (r, c) = cell
-        if (r !in puzzle.numbers.indices || c !in puzzle.numbers[r].indices) return
-        if (puzzle.given[r][c]) return
+        if (r !in s.puzzle.numbers.indices || c !in s.puzzle.numbers[r].indices) return
+        if (s.puzzle.given[r][c]) return
 
-        playerEntries = playerEntries.toMutableMap().apply {
-            put("$r,$c", num)
-        }
+        state = s.copy(
+            playerEntries = s.playerEntries + ("$r,$c" to num)
+        )
     }
 
     fun erase() {
-        val cell = selectedCell ?: return
+        val s = state
+        val cell = s.selectedCell ?: return
         val (r, c) = cell
-        if (r !in puzzle.numbers.indices || c !in puzzle.numbers[r].indices) return
-        if (puzzle.given[r][c]) return
+        if (r !in s.puzzle.numbers.indices || c !in s.puzzle.numbers[r].indices) return
+        if (s.puzzle.given[r][c]) return
 
-        playerEntries = playerEntries.toMutableMap().apply {
-            remove("$r,$c")
-        }
-        validationResult = null
+        state = s.copy(
+            playerEntries = s.playerEntries - "$r,$c",
+            validationResult = null
+        )
     }
 
     fun check() {
-        if (!isAllFilled) return
+        val s = state
+        if (!s.isAllFilled) return
 
         try {
-            val fullNumbers = puzzle.numbers.mapIndexed { r, row ->
+            val fullNumbers = s.puzzle.numbers.mapIndexed { r, row ->
                 row.mapIndexed { c, _ ->
-                    if (puzzle.given[r][c]) puzzle.numbers[r][c]
-                    else playerEntries["$r,$c"]
+                    if (s.puzzle.given[r][c]) s.puzzle.numbers[r][c]
+                    else s.playerEntries["$r,$c"]
                 }
             }
-            val testPuzzle = puzzle.copy(numbers = fullNumbers)
-            validationResult = PuzzleValidator.validate(testPuzzle)
+            val testPuzzle = s.puzzle.copy(numbers = fullNumbers)
+            state = s.copy(validationResult = PuzzleValidator.validate(testPuzzle))
         } catch (e: Exception) {
             android.util.Log.e("CrossMath", "check failed", e)
         }
     }
 
     fun newGame(size: Int, difficulty: Difficulty) {
-        puzzle = PuzzleGenerator.generate(size, difficulty)
-        playerEntries = mutableMapOf()
-        selectedCell = null
-        validationResult = null
+        state = GameState(
+            puzzle = PuzzleGenerator.generate(size, difficulty)
+        )
     }
 }
