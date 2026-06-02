@@ -22,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,13 +55,15 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
     ) {
         Text("CrossMath", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
 
-        PuzzleGridView(
-            puzzle = puzzle,
-            playerEntries = playerEntries,
-            selectedCell = selectedCell,
-            validationResult = validationResult,
-            onCellClick = { r, c -> viewModel.selectCell(r, c) }
-        )
+        key(puzzle.size) {
+            PuzzleGridView(
+                puzzle = puzzle,
+                playerEntries = playerEntries,
+                selectedCell = selectedCell,
+                validationResult = validationResult,
+                onCellClick = { r, c -> viewModel.selectCell(r, c) }
+            )
+        }
 
         StatusBar(validationResult)
 
