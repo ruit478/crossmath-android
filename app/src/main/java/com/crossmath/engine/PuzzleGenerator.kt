@@ -19,11 +19,6 @@ object PuzzleGenerator {
 
     private val ALL_OPS = Operator.entries.toList()
 
-    fun generate(size: Int, difficulty: Difficulty, seed: Long? = null): Puzzle {
-        seed?.let { Random it } // seeded for repeatability
-        return generate(size, difficulty)
-    }
-
     fun generate(size: Int, difficulty: Difficulty): Puzzle {
         require(size in 3..7) { "Grid size must be 3-7" }
 
