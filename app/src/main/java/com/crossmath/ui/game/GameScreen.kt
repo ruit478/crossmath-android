@@ -246,7 +246,8 @@ fun PuzzleGridView(
                 // Row target
                 Box(
                     modifier = Modifier
-                        .width(targetColWidth),
+                        .width(targetColWidth)
+                        .height(cellWidth),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
