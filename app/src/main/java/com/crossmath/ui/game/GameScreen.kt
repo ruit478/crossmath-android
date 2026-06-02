@@ -93,12 +93,6 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
             ) { Text("4×4", fontWeight = FontWeight.Bold) }
 
             Button(
-                onClick = { viewModel.newGame(size = 5, difficulty = Difficulty.HARD) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1565C0)),
-                shape = RoundedCornerShape(8.dp)
-            ) { Text("5×5", fontWeight = FontWeight.Bold) }
-
-            Button(
                 onClick = { viewModel.check() },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
                 shape = RoundedCornerShape(8.dp)
@@ -305,7 +299,7 @@ fun PuzzleGridView(
                 Box(
                     modifier = Modifier
                         .width(cellWidth)
-                        .height(cellWidth),
+                        .height(cellWidth / 2),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
