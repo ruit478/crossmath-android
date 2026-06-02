@@ -47,15 +47,15 @@ object PuzzleGenerator {
             }
         }
 
-        // 4. Calculate targets
         val rowTargets = List(size) { r ->
             val rowNums = numbers[r].map { it!! }
-            ExpressionEvaluator.evaluate(rowNums, rowOps[r])
+            ExpressionEvaluator.evaluate(rowNums, rowOps[r])!!
         }
+
         val colTargets = List(size) { c ->
             val colNums = (0 until size).map { numbers[it][c]!! }
             val ops = (0 until size - 1).map { colOps[it][c] }
-            ExpressionEvaluator.evaluate(colNums, ops)
+            ExpressionEvaluator.evaluate(colNums, ops)!!
         }
 
         // 5. Blank cells based on difficulty

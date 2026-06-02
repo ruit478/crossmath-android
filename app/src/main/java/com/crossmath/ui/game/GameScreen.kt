@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -64,7 +63,10 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
 
         StatusBar(validationResult)
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Button(onClick = { viewModel.newGame(size = 3, difficulty = Difficulty.EASY) }) {
                 Text("3×3 Easy")
             }
@@ -154,7 +156,11 @@ fun PuzzleGridView(
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         for (r in 0 until size) {
-            Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+            // ── Number row ──
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 for (c in 0 until size) {
                     val isGiven = puzzle.given[r][c]
                     val entryKey = "$r,$c"
@@ -193,6 +199,7 @@ fun PuzzleGridView(
                         )
                     }
 
+                    // ── Row operator ──
                     if (c < size - 1) {
                         Box(
                             modifier = Modifier
@@ -210,6 +217,7 @@ fun PuzzleGridView(
                     }
                 }
 
+                // Row target
                 Box(
                     modifier = Modifier
                         .width(cellWidth * 0.8f + 4.dp),
@@ -224,8 +232,12 @@ fun PuzzleGridView(
                 }
             }
 
+            // ── Column operators ──
             if (r < size - 1) {
-                Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(0.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     for (c in 0 until size) {
                         Box(
                             modifier = Modifier
@@ -252,13 +264,14 @@ fun PuzzleGridView(
         }
     }
 
-    // Column targets
+    // ── Column targets ──
     val targetOffset = cellWidth * 0.8f + 4.dp
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = targetOffset, top = 4.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         for (c in 0 until size) {
             Text(
@@ -281,17 +294,26 @@ fun NumberPadView(
     onErase: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier = modifier.padding(top = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             for (n in 1..3) NumberButton(n, onNumber)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(modifier = Modifier.width(12.dp))
             for (n in 4..6) NumberButton(n, onNumber)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(modifier = Modifier.width(12.dp))
             for (n in 7..9) NumberButton(n, onNumber)
         }
-        Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Button(
                 onClick = onErase,
                 colors = ButtonDefaults.buttonColors(
@@ -310,7 +332,7 @@ fun NumberPadView(
 private fun NumberButton(num: Int, onClick: (Int) -> Unit) {
     Box(
         modifier = Modifier
-            .size(64.dp)
+            .size(60.dp)
             .clip(CircleShape)
             .background(Color(0xFF1565C0))
             .clickable { onClick(num) },
@@ -318,9 +340,10 @@ private fun NumberButton(num: Int, onClick: (Int) -> Unit) {
     ) {
         Text(
             text = "$num",
-            fontSize = 28.sp,
+            fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = Color.White,
+            textAlign = TextAlign.Center
         )
     }
 }

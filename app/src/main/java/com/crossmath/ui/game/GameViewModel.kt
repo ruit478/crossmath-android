@@ -41,8 +41,9 @@ class GameViewModel : ViewModel() {
     // ── Actions ────────────────────────────────────────────────
 
     fun selectCell(row: Int, col: Int) {
-        if (!puzzle.given[row][col]) {
+        if (row in puzzle.numbers.indices && col in puzzle.numbers[row].indices && !puzzle.given[row][col]) {
             selectedCell = if (selectedCell == row to col) null else (row to col)
+            validationResult = null
         }
     }
 

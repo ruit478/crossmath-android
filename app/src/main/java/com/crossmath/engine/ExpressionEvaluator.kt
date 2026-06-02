@@ -10,25 +10,28 @@ import com.crossmath.model.Operator
  */
 object ExpressionEvaluator {
 
-    fun evaluate(numbers: List<Int>, operators: List<Operator>): Int {
-        require(numbers.size == operators.size + 1) {
-            "Need one more number than operators: ${numbers.size} numbers, ${operators.size} ops"
-        }
+    /**
+     * Evaluate an expression left-to-right.
+     * Returns null if the expression is invalid (div by zero, non-exact division).
+     */
+    fun evaluate(numbers: List<Int>, operators: List<Operator>): Int? {
+        if (numbers.size != operators.size + 1) return null
         var result = numbers[0]
         for (i in operators.indices) {
-            result = apply(result, operators[i], numbers[i + 1])
+            val next = apply(result, operators[i], numbers[i + 1]) ?: return null
+            result = next
         }
         return result
     }
 
-    private fun apply(a: Int, op: Operator, b: Int): Int {
+    private fun apply(a: Int, op: Operator, b: Int): Int? {
         return when (op) {
             Operator.PLUS -> a + b
             Operator.MINUS -> a - b
             Operator.MULTIPLY -> a * b
             Operator.DIVIDE -> {
-                require(b != 0) { "Division by zero" }
-                require(a % b == 0) { "Division must be exact: $a / $b" }
+                if (b == 0) return null
+                if (a % b != 0) return null
                 a / b
             }
         }
