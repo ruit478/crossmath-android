@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -244,19 +243,16 @@ fun PuzzleGridView(
                 }
 
                 // Row target
-                Box(
+                Text(
+                    text = "=${puzzle.rowTargets[r]}",
+                    fontSize = if (size <= 3) 18.sp else 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TargetColor,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier
                         .width(targetColWidth)
-                        .height(cellWidth),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "=${puzzle.rowTargets[r]}",
-                        fontSize = if (size <= 3) 18.sp else 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TargetColor
-                    )
-                }
+                        .align(Alignment.CenterVertically)
+                )
             }
 
             // Column operators
@@ -290,27 +286,22 @@ fun PuzzleGridView(
             }
         }
 
-        // ── Column targets — mirror number-row structure ──
+        // ── Column targets ──
         Row(
             horizontalArrangement = Arrangement.spacedBy(0.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.width(targetColWidth))
             for (c in 0 until size) {
-                Box(
+                Text(
+                    text = "=${puzzle.colTargets[c]}",
+                    fontSize = if (size <= 3) 18.sp else 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TargetColor,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier
                         .width(cellWidth)
-                        .height(cellWidth / 2),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "=${puzzle.colTargets[c]}",
-                        fontSize = if (size <= 3) 18.sp else 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TargetColor,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                        .align(Alignment.CenterVertically)
+                )
                 if (c < size - 1) {
                     Spacer(modifier = Modifier.width(opWidth))
                 }
